@@ -1,0 +1,384 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="validate-client-credentials-flow"
+		doc:id="30bf4e48-d86a-49e2-94ae-abe5df5de5e7">
+		<set-variable value="${http.request.header.clientId}"
+			doc:name="Set Client Id"
+			doc:id="5ccb7f53-458e-4507-b87c-925d3de1e5fe" variableName="clientId" />
+		<set-variable value="${http.request.header.clientSecret}"
+			doc:name="Set Client Secret"
+			doc:id="cc427774-ac0e-4034-86fe-7dff69d87c85"
+			variableName="clientSecret" />
+		<choice doc:name="Choice"
+			doc:id="c545ffeb-2f7e-485a-9339-b7c1bfb6607f">
+			<when
+				expression="#[attributes.headers.'X-API-ClientKey' == vars.clientId and attributes.headers.'X-API-ClientSecret' == vars.clientSecret]">
+				<json-logger:logger
+					doc:name="Client Credentials Authorized"
+					doc:id="bf8d56c8-314e-41b1-a529-a2d8aa0c062c"
+					config-ref="jsonLoggerConfig"
+					message='Client Credentials Authorized' tracePoint="AFTER_REQUEST" />
+			</when>
+			<otherwise>
+				<raise-error doc:name="Raise error"
+					doc:id="e70e6914-96e0-4c42-9d08-90bebf2ef7a9"
+					type="OKTA:UNAUTHORIZED" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="create-user-flow"
+		doc:id="7f1a05bf-1a8d-4209-aa7c-2b964715a49b">
+		<flow-ref doc:name="Validate Client Credentials"
+			doc:id="40d378f5-fd5f-4d56-8d48-92b63eae342e"
+			name="validate-client-credentials-flow" />
+		<json-logger:logger doc:name="Log Original Payload"
+			doc:id="6ea28879-f4a0-46de-9c3d-106acf3a13d1"
+			config-ref="jsonLoggerConfig"
+			message="Create User Request Payload Before Transform"
+			tracePoint="BEFORE_TRANSFORM" />
+		<ee:transform doc:name="Create User Request" doc:id="e3030be5-bc79-4306-92e8-a8a560228062" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "profile": {
+    "firstName": payload.firstName,
+    "lastName": payload.lastName,
+    "email": payload.email,
+    "login": payload.email,
+    "mobilePhone": payload.mobilePhone
+  },
+  "credentials": {
+    "password" : { "value": payload.password }
+  },
+   "groupIds": [
+    "00ga0d3d9VpN4fhcU4x6"
+  ]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger
+			doc:name="Log Transformed Payload"
+			doc:id="2aa70bca-00a9-4e5b-b8dc-7618aef5af55"
+			config-ref="jsonLoggerConfig"
+			message="OKTA User Creation POST Request Payload"
+			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+		<flow-ref doc:name="Set OKTA App Token Flow"
+			doc:id="bf5bfd0c-24cd-4ecb-ae34-4d8d0fbaf1ca"
+			name="set-variables-flow" />
+		<http:request method="POST"
+			doc:name="OKTA User Creation POST Request"
+			doc:id="0b133bbc-960f-4390-999f-66eb998e5b66"
+			path="${okta.user.basepath}?activate=true"
+			outputMimeType="application/json" responseTimeout="30000" config-ref="httpRequestConfigurationOktaMain">
+			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping targetType="OKTA:ERROR" />
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : vars.oktaAppToken
+}]]]></http:headers>
+		</http:request>
+		<json-logger:logger doc:name="Log Response"
+			doc:id="49575cd8-d50e-4dcd-a792-b1df97a48070"
+			config-ref="jsonLoggerConfig"
+			message="OKTA User Creation POST Request Payload"
+			tracePoint="AFTER_REQUEST" priority="TRACE" />
+		<ee:transform doc:name="Create User Response" doc:id="5d89ba47-e30b-4afd-918e-8ef008fc0d21" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	
+    "userId": payload.id,
+    "status": payload.status,
+    "firstName": payload.profile.firstName,
+    "lastName": payload.profile.lastName,
+    "mobilePhone": payload.profile.mobilePhone,                      
+    "login": payload.profile.login,
+    "email": payload.profile.email,
+    "created": payload.created,
+    "activated": payload.activated,
+    "statusChanged": payload.statusChanged,
+    "lastLogin": payload.lastLogin,
+    "lastUpdated": payload.lastUpdated,
+    "passwordChanged": payload.passwordChanged   
+} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger
+			doc:name="Log Transformed Response"
+			doc:id="0eb1b2b0-52e9-4077-843a-9e72ef68291c"
+			config-ref="jsonLoggerConfig" message="Create User Response Payload"
+			tracePoint="AFTER_TRANSFORM" />
+	</flow>
+	<flow name="user-authentication-flow"
+		doc:id="64ab7659-3209-4ba2-b88a-3bc502f00cf4">
+		<flow-ref doc:name="Validate Client Credentials"
+			doc:id="d8a3319a-c9f8-49a5-922b-519ed8795b9a"
+			name="validate-client-credentials-flow" />
+		<json-logger:logger doc:name="Log original Payload"
+			doc:id="1db8789e-f7b2-4175-9de9-74dbcb92c45a"
+			config-ref="jsonLoggerConfig"
+			message=" Create User Response Payload Before Transform"
+			tracePoint="BEFORE_TRANSFORM" />
+		<set-variable
+			value="#[message.attributes.headers.'OKTA-ClientKey']"
+			doc:name="Set Okta Client Id"
+			doc:id="c34c05a4-2f5d-4b14-beb4-28e2c862575f"
+			variableName="oktaClientId" />
+		<set-variable
+			value="#[message.attributes.headers.'OKTA-ClientSecret']"
+			doc:name="Set Okta Client Secret"
+			doc:id="8248de8c-73bb-4ef2-b421-cbdd9815e8b5"
+			variableName="oktaClientSecret" />
+		<ee:transform doc:name="User Authentication Request" doc:id="e55648a1-d223-41ef-8835-edc1dad1a843" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "username": payload.email,
+  "password": payload.password   
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger
+			doc:name="Log Transformed Request"
+			doc:id="9e2b362a-cd9d-4ddc-a1ed-2f33240246ba"
+			config-ref="jsonLoggerConfig"
+			message="User Authentication Request Payload"
+			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+		<http:request method="POST"
+			doc:name="OKTA User Authentication Request- POST"
+			doc:id="275623ed-e63a-4eec-99be-5a0fce2a4ab2"
+			config-ref="httpRequestConfigurationOktaUserAuthentication"
+			path="${okta.user.authenticate.basepath}"
+			outputMimeType="application/json">
+			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping targetType="OKTA:ERROR" />
+		</http:request>
+		<json-logger:logger doc:name="Log Response Payload"
+			doc:id="def235ec-d150-49f2-be60-465f3b7dbe0d"
+			config-ref="jsonLoggerConfig"
+			message="User Authentication Response Payload"
+			tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+		<ee:transform doc:name="User Authentication Response" doc:id="b71066c8-6155-4389-a5ba-e980354b7f51" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"userId": payload."_embedded".user.id,                      
+    "firstName": payload."_embedded".user.profile.firstName,
+    "lastName": payload."_embedded".user.profile.lastName,
+    "login": payload."_embedded".user.profile.login,
+    "expiresAt": payload.expiresAt,
+    "status": payload.status,
+    "sessionToken": payload.sessionToken 
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger
+			doc:name="Log Transformed Response"
+			doc:id="5a377ad5-fb70-474c-bd8f-a5d4bcb7b732"
+			config-ref="jsonLoggerConfig"
+			message=" User Authentication Response Payload"
+			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+		<choice doc:name="Choice"
+			doc:id="37fa86e6-93b5-4612-aedb-c45527c371f3">
+			<when expression='#[message.attributes.statusCode == 200]'>
+				<flow-ref doc:name="Authorization Sub Flow"
+					doc:id="eed88bd6-9bd8-4270-8e8d-eb8cc123117a"
+					name="authorization-sub-flow" />
+			</when>
+		</choice>
+	</flow>
+	<sub-flow name="authorization-sub-flow"
+		doc:id="2f544a47-1032-4d9f-9c81-0e5c051c8a56">
+		<json-logger:logger
+			doc:name="Authorization Sub Flow Entry"
+			doc:id="ae14313f-e994-4c6f-a92e-48d1fa7ef618"
+			config-ref="jsonLoggerConfig" message="Authorization Sub Flow Entry" />
+		<http:request method="POST" doc:name="Request"
+			doc:id="742fcf72-9e43-4404-9b98-111e05209cb6"
+			config-ref="httpRequestConfigurationOktaUserAuthentication"
+			path="${okta.app.auth.url}" outputMimeType="application/json">
+			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping targetType="OKTA:ERROR" />
+			<http:body><![CDATA[#[%dw 2.0
+output application/x-www-form-urlencoded
+---
+{
+	"redirect_uri":"http://localhost:8080/authorization-code/callback"
+}]]]></http:body>
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"redirect_uri" : "http://localhost:8080/authorization-code/callback"
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Auth Response" doc:id="2079395b-dbed-487c-aad2-32b775219963" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "token_type": payload.token_type,
+    "expires_in": payload.expires_in,
+    "access_token": payload.access_token,
+    "scope": payload."scope"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<json-logger:logger
+			doc:name="Authorization Sub Flow Exit"
+			doc:id="eca81c07-cb19-47f3-aa24-7cbb0a547cac"
+			config-ref="jsonLoggerConfig" message="Authorization Sub Flow Exit"
+			tracePoint="AFTER_TRANSFORM" />
+	</sub-flow>
+	<flow name="set-variables-flow"
+		doc:id="f348cb75-bcc4-45d9-a2cb-cb4c541782fa">
+		<set-variable value="${okta.app.token}"
+			doc:name="Set OKTA App Authorization Token"
+			doc:id="7d6c981d-fd99-43fc-a044-51db0286bba6"
+			variableName="oktaAppToken" />
+		<choice doc:name="Choice"
+			doc:id="24020bb8-aee9-438d-af71-7a0128fef351">
+			<when
+				expression="#[!isEmpty(message.attributes.uriParams.'userId')]">
+				<set-variable
+					value="#[message.attributes.uriParams.'userId']"
+					doc:name="Set OKTA User Id"
+					doc:id="8acd05d8-44dd-49b2-9596-cf94affa5a4b" variableName="userId" />
+			</when>
+		</choice>
+	</flow>
+	<flow name="forgot-password-flow"
+		doc:id="07974fdc-92e5-4dd3-9dbf-82d4de054f98">
+		<flow-ref doc:name="Validate Client Credentials"
+			doc:id="e5f1135b-3738-40e3-89ba-e5da722aeb95"
+			name="validate-client-credentials-flow" />
+		<json-logger:logger doc:name="Payload"
+			doc:id="1b075b13-c729-407c-be6c-637aabf7af9e"
+			config-ref="jsonLoggerConfig"
+			message="Change User Password Request Payload"
+			tracePoint="BEFORE_TRANSFORM" />
+		<flow-ref doc:name="Set OKTA App Token Flow"
+			doc:id="13f9264c-d9eb-452b-9570-540cbb0622d8"
+			name="set-variables-flow" />
+		<json-logger:logger
+			doc:name="Log Transformed Message"
+			doc:id="39e0a65e-d845-4d88-8f09-d7836befbafb"
+			config-ref="jsonLoggerConfig"
+			message="Change User Password Request Payload"
+			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+		<http:request method="POST"
+			doc:name="OKTA Forgot Password"
+			doc:id="34df085f-1edc-4570-ab13-18a34d1af33c"
+			path="${okta.user.basepath}/{userId}${okta.user.forgotPassword.basepath}"
+			outputMimeType="application/json" responseTimeout="30000" config-ref="httpRequestConfigurationOktaMain">
+			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping targetType="OKTA:ERROR" />
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : vars.oktaAppToken
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"userId" : vars.userId
+}]]]></http:uri-params>
+		</http:request>
+		<json-logger:logger doc:name="Log Response Payload"
+			doc:id="b103436d-b062-4028-ac75-9687dd59b510"
+			config-ref="jsonLoggerConfig"
+			message="OKTA Update User Password Response Payload"
+			tracePoint="AFTER_REQUEST" />
+	
+</flow>
+
+	<flow name="get-user-details-flow"
+		doc:id="9c9eaade-2a32-46a7-bbd2-2972b798301b">
+		<flow-ref doc:name="Validate Client Credentials"
+			doc:id="1aa546ab-2da4-49ef-8389-81cbb561567b"
+			name="validate-client-credentials-flow" />
+		<json-logger:logger doc:name="Payload"
+			doc:id="87b99093-38c4-459f-81b2-2a35c1e6b2b1"
+			config-ref="jsonLoggerConfig" message="OKTA Deactivate User Payload"
+			tracePoint="BEFORE_REQUEST" />
+		<flow-ref doc:name="Set OKTA App Token Flow"
+			doc:id="1bb3a66a-9511-4549-8987-f09721715421"
+			name="set-variables-flow" />
+		<http:request method="POST"
+			doc:name="OKTA Get User"
+			doc:id="19f317bb-2ab4-4b65-bea3-56b8daa06043"
+			path="${okta.user.basepath}/{userId}"
+			outputMimeType="application/json" responseTimeout="30000" config-ref="httpRequestConfigurationOktaMain">
+			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
+			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping targetType="OKTA:ERROR" />
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"Authorization" : vars.oktaAppToken
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"userId" : vars.userId
+}]]]></http:uri-params>
+
+		</http:request>
+		<json-logger:logger doc:name="Log Response Payload"
+			doc:id="8e9393e7-e0d7-46ab-83e4-b7f858b83616"
+			config-ref="jsonLoggerConfig"
+			message="OKTA Deactivate User Response Payload"
+			tracePoint="AFTER_REQUEST" priority="TRACE" />
+		<ee:transform doc:name="Create User Response"
+			doc:id="443c31ca-1173-48c9-96af-be9e17f38ecb">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  "userId" : payload.id,
+  "status" : payload.status,
+  "firstName" : payload.profile.firstName,
+  "lastName" : payload.profile.lastName,
+  "login" : payload.profile.login,
+  "email" : payload.profile.email,
+  "secondEmail" : payload.profile.secondEmail,
+  "mobilePhone" : payload.profile.mobilePhone,
+  "created" : payload.created,
+  "activated" : payload.activated,
+  "statusChnaged" : payload.statusChanged,
+  "lastLogin" : payload.lastLogin,
+  "lastUpdated" : payload.lastUpdated,
+  "passwordChanged" : payload.passwordChanged
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+
+	</flow>
+
+</mule>
+

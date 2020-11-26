@@ -1,0 +1,46 @@
+#%RAML 1.0 Trait
+description: Standard HTTP error responses
+
+responses:
+  400:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "BAD_REQUEST",
+          "errorMessage": <<messageReference>>
+        }
+  401:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "UNAUTHORIZED",
+          "errorMessage": "Authorization required"
+        }
+  403:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "FORBIDDEN",
+          "errorMessage": "You don't have permission to access this resource"
+        }
+  404:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "NOT_FOUND",
+          "errorMessage": "Resource not found"
+        }
+  500:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "INTERNAL_SERVER_ERROR",
+          "errorMessage": "An internal error occurred. Please check logs for more details."
+        }
+  503:
+    body: 
+      application/json:
+        example: {
+          "errorCode" : "SERVICE_UNAVAILABLE",
+          "errorMessage": "Server down for maintenance."
+        }

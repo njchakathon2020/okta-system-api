@@ -1,0 +1,45 @@
+http:
+  port: "8081"
+  request:
+    header:
+      clientId: "2f9f2d34-cf0d-44d0-bac3-636182f402db"
+      clientSecret: "921867d0-f78f-4137-aa21-b21bdf0590bc"
+      
+okta:
+  host: "dev-6077134.okta.com"
+  port: "443"
+  
+  protocol: "HTTPS"
+  
+  app:
+    token: "SSWS 004ytwc_wLyzw5JHQc70P56qzFvMB24UclSV8-3ZwG"
+    auth:
+      url: "/oauth2/default/v1/token?scope=mulescope&grant_type=client_credentials"
+  
+  user:
+    basepath: "/api/v1/users"
+    
+    authenticate:
+      basepath: "/api/v1/authn"
+
+    forgotPassword:
+      basepath: "/credentials/forgot_password?sendEmail=false"
+      method: "POST"
+      
+    changePassword:
+      basepath: "/credentials/change_password"
+      
+    deactivate:
+      basepath: "/lifecycle/deactivate"
+
+      
+json:
+  logger:
+    application:
+      name: ${project.artifactId}
+      version: ${project.version}
+    disabledFields: ""
+
+mule:
+  env: ""
+      

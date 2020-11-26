@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<http:listener-config
+		name="oktaSysApiHttpListenerConfig">
+		<http:listener-connection host="0.0.0.0"
+			port="8081" />
+	</http:listener-config>
+	<apikit:config name="oktaSysApiConfig"
+		api="okta-system-api.raml" outboundHeadersMapName="outboundHeaders"
+		httpStatusVarName="httpStatus" />
+	<json-logger:config name="jsonLoggerConfig"
+		doc:name="JSON Logger Config"
+		doc:id="c3dc9870-22b5-4a3e-9dad-8640ae62e309"
+		environment="${mule.env}"
+		disabledFields="${json.logger.disabledFields}" />
+	<configuration-properties
+		doc:name="Configuration properties"
+		doc:id="49f75cca-3271-40a6-a488-ec844829d73c"
+		file="configs\okta.sys.api.${env}.yaml" />
+	<global-property doc:name="Global Property"
+		doc:id="767575bc-8be3-4847-86b8-67c136f9d1b4" name="env" value="dev" />
+	<http:request-config
+		name="httpRequestConfigurationOktaMain"
+		doc:name="HTTP Request configuration"
+		doc:id="066cd71c-97a2-466b-98a8-fdac3dae4e7e" responseTimeout="30000">
+		<http:request-connection protocol="HTTPS"
+			host="${okta.host}" port="${okta.port}" />
+	</http:request-config>
+	<http:request-config
+		name="httpRequestConfigurationOktaUserAuthentication"
+		doc:name="HTTP Request configuration"
+		doc:id="4441828e-fb84-4d03-b3a9-43aa730b06b5">
+		<http:request-connection protocol="HTTPS"
+			host="${okta.host}" port="${okta.port}">
+			<http:authentication>
+				<http:basic-authentication
+					username="#[vars.oktaClientId]" password="#[vars.oktaClientSecret]" />
+			</http:authentication>
+		</http:request-connection>
+	</http:request-config>
+
+	<error-handler name="okta-globalError_Handler"
+		doc:id="82b13e1b-8e3e-439d-a382-d857ec487577">
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="a986f86c-759e-4634-97b2-934fa21b3459" type="OKTA:FORBIDDEN"
+			when='#[error.muleMessage.typedValue.value.errorSummary as String contains "Password reset failed" ]'>
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="737b64fc-be44-4c63-ae78-876905f2f795"
+				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+			<set-payload
+				value="#[%dw 2.0
+output application/json
+---
+{
+  statusCode: &quot;500&quot;,
+  message: &quot;Forgot Password not allowed in user's current status.&quot;
+ }]"
+				doc:name="Set Payload with error message"
+				doc:id="c49250b2-2084-4fc9-817d-d567a800187b" />
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="cf5c9fd5-6640-4821-83a6-c1aef664c537"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="4b369dab-31d7-4525-bb14-6198e11d46ad" type="OKTA:NOT_FOUND">
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="c24459fe-fab9-4467-954a-79024624d9e3"
+				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+			<set-payload
+				value="#[%dw 2.0
+output application/json
+---
+{
+  statusCode: &quot;500&quot;,
+  message: &quot;User not found. Try with correct User ID.&quot;
+ }]"
+				doc:name="Set Payload with error message"
+				doc:id="d73f9bed-65ce-4f81-a480-ab4b739e58fb" />
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="24b39409-b9b9-4fae-a4f1-d6a5f578ef04"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="51b04a15-1bad-46c3-b6e8-a23ef24d528f" type="OKTA:ERROR">
+
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="7bf57e13-b064-49f3-90f0-4e9d3ee2b02a"
+				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+			<ee:transform doc:name="Error Code Transform Message"
+				doc:id="d977dac2-f966-4bde-8c10-6e50c52c5798">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"statusCode": if(!isEmpty(error.muleMessage.payload))
+	 				error.muleMessage.payload.errorCode 
+	 			 else 
+	 			 	message.attributes.httpStatus,
+	"message": if(!isEmpty(error.muleMessage.payload) and
+					   !isEmpty(error.muleMessage.payload.errorCauses.*errorSummary)) 
+						error.muleMessage.payload.errorCauses.*errorSummary
+					else
+						error.detailedDescription
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="4b5ea669-4847-4668-b445-9abc5e8196ab"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="bb075b28-96f7-4f97-8783-ff81d0828197"
+			type="OKTA:UNAUTHORIZED">
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="e85c2bc4-dee4-435e-8087-cdbb2fec6f72"
+				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+
+			<ee:transform doc:name="Error Code Transform Message"
+				doc:id="5d66d4cb-3eef-49de-92aa-c5be008d48cd">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"statusCode": 401,
+	"message": "Invalid Client Credentials"
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="6cb8eba8-14ac-4138-9665-de35181af462"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Continue"
+			doc:id="48bc7cf6-41fe-438d-9339-545d2d447922" type="ANY">
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="aa4ca4f7-3d19-4622-86c9-b104a1fc2a2b"
+				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+			<set-payload
+				value="#[%dw 2.0
+output application/json
+---
+{
+  statusCode: &quot;500&quot;,
+  message: &quot;Error sending request to Okta.&quot;
+ }]"
+				doc:name="Set Payload with error message"
+				doc:id="5febb03a-af35-4fa2-a2e7-9d8833237797" />
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="d4dc0af1-9ce9-4230-9b47-1c62ad27230d"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+	</error-handler>
+</mule>

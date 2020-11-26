@@ -1,0 +1,83 @@
+#%RAML 1.0
+title: Okta System API
+version: v1
+
+types:
+  User: !include resources/datatypes/user-details-data-type.raml 
+
+traits: 
+  client-id-secret-required: !include /resources/traits/client-id-secret-required-trait.raml
+  okta-client-credentials: !include /resources/traits/okta-client-credentials-required.raml
+  standard-http-responses: !include /resources/traits/http-responses-trait.raml
+
+/users:
+  displayName: Users
+  post:
+    is: [client-id-secret-required, { standard-http-responses: { messageReference : Request invalid. Error creating new user in Okta. } }]
+    displayName: Create User in Okta
+    description: Create a new user
+    body:
+      application/json:
+        type: User
+        examples:
+          output: !include /resources/examples/register-user-input-example.raml
+    
+    responses: 
+        200:
+          body: 
+            application/json:
+              example:
+                output: !include /resources/examples/registration-success-response-example.raml
+
+  /authenticate:
+    displayName: Authenticate
+    is: [client-id-secret-required, okta-client-credentials, { standard-http-responses: { messageReference : Request invalid. Error authenticating user. } }]
+    post:
+      displayName: Authenticate user
+      description: Authenticate user
+      body:
+        application/json:
+          type: User
+          examples:
+            output: 
+                {
+                  "email": "test-email-id@email.com",
+                  "password": "user password"                 
+                }
+      
+      responses: 
+          200:
+            body: 
+              application/json:
+                example:
+                  output: !inlcude /resources/examples/token-example.raml
+     
+      
+  /{userId}:
+    displayName: User
+    get:
+      is: [client-id-secret-required, { standard-http-responses: { messageReference : Request invalid. Error retrieving user details. } }]
+      displayName: Get User
+      description: Retrieve user details by userid
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                output: !include /resources/examples/registration-success-response-example.raml
+    
+    /forgotPassword:
+      get:
+        is: [client-id-secret-required, { standard-http-responses: { messageReference : Request invalid.} }]
+        displayName: Forgot Password
+        description: Send password reset link
+        responses:
+          201:
+            description: Success
+            body:
+              application/json:
+                example:
+                  output: 
+                    {
+                      "resetPasswordUrl": "https://dev-462737.okta.com/signin/reset-password/XE6wE17zmphl3KqAPFxO"
+                    }
