@@ -51,10 +51,11 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 		</http:request-connection>
 	</http:request-config>
 
-	<error-handler name="okta-globalError_Handler"
+	<configuration doc:name="Configuration" doc:id="6a2cdb79-72da-4c4e-8c68-fb59a4914490" defaultErrorHandler-ref="okta-global-error-handler" />
+	<error-handler name="okta-global-error-handler"
 		doc:id="82b13e1b-8e3e-439d-a382-d857ec487577">
 		<on-error-propagate enableNotifications="true"
-			logException="true" doc:name="On Error Continue"
+			logException="true" doc:name="On Error Propagate"
 			doc:id="a986f86c-759e-4634-97b2-934fa21b3459" type="OKTA:FORBIDDEN"
 			when='#[error.muleMessage.typedValue.value.errorSummary as String contains "Password reset failed" ]'>
 			<json-logger:logger
@@ -79,7 +80,7 @@ output application/json
 				tracePoint="END" />
 		</on-error-propagate>
 		<on-error-propagate enableNotifications="true"
-			logException="true" doc:name="On Error Continue"
+			logException="true" doc:name="On Error Propagate"
 			doc:id="4b369dab-31d7-4525-bb14-6198e11d46ad" type="OKTA:NOT_FOUND">
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
@@ -166,7 +167,7 @@ output application/json
 				tracePoint="END" />
 		</on-error-propagate>
 		<on-error-propagate enableNotifications="true"
-			logException="true" doc:name="On Error Continue"
+			logException="true" doc:name="On Error Propagate"
 			doc:id="48bc7cf6-41fe-438d-9339-545d2d447922" type="ANY">
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
