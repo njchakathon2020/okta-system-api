@@ -1,5 +1,5 @@
 http:
-  port: "8081"
+  port: "8084"
   request:
     header:
       clientId: "2f9f2d34-cf0d-44d0-bac3-636182f402db"
@@ -15,7 +15,9 @@ okta:
     token: "SSWS 004ytwc_wLyzw5JHQc70P56qzFvMB24UclSV8-3ZwG"
     auth:
       url: "/oauth2/default/v1/token?scope=mulescope&grant_type=client_credentials"
-  
+      clientId: "0oa1dimum1UuEVwjn5d6"
+      clientSecret: "97wuJ2yduQOhAUV8YzcKzdGJ44ltK0R-Z7L-vmMU"
+
   user:
     basepath: "/api/v1/users"
     

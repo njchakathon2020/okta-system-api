@@ -64,7 +64,7 @@ output application/json
     "password" : { "value": payload.password }
   },
    "groupIds": [
-    "00ga0d3d9VpN4fhcU4x6"
+    "00g1dgukcNjtfL6Vc5d6"
   ]
 }]]></ee:set-payload>
 			</ee:message>
@@ -222,17 +222,11 @@ output application/json
 			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
 			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
 			<error-mapping targetType="OKTA:ERROR" />
-			<http:body><![CDATA[#[%dw 2.0
-output application/x-www-form-urlencoded
+			<http:body ><![CDATA[#[output application/x-www-form-urlencoded
 ---
 {
 	"redirect_uri":"http://localhost:8080/authorization-code/callback"
 }]]]></http:body>
-			<http:headers><![CDATA[#[output application/java
----
-{
-	"redirect_uri" : "http://localhost:8080/authorization-code/callback"
-}]]]></http:headers>
 		</http:request>
 		<ee:transform doc:name="Transform Auth Response" doc:id="2079395b-dbed-487c-aad2-32b775219963" >
 			<ee:message >
