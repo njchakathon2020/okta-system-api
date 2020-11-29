@@ -1,6 +1,6 @@
 # okta-system-api
 
-###About the project
+### About the project
 
 The okta-system-api is used to access the Okta services.To access this endpoint user need to have valid client-id and client-secret credentials.
 
