@@ -6,10 +6,10 @@ http:
       clientSecret: "921867d0-f78f-4137-aa21-b21bdf0590bc"
       
 okta:
-  host: "backend-mock-ext-api.us-e2.cloudhub.io"
-  port: "80"
+  host: "dev-6077134.okta.com"
+  port: "443"
   
-  protocol: "HTTP"
+  protocol: "HTTPS"
   
   app:
     token: "SSWS 004ytwc_wLyzw5JHQc70P56qzFvMB24UclSV8-3ZwG"
@@ -19,10 +19,10 @@ okta:
       clientSecret: "97wuJ2yduQOhAUV8YzcKzdGJ44ltK0R-Z7L-vmMU"
 
   user:
-    basepath: "/api/users"
+    basepath: "/api/v1/users?activate=true"
     
     authenticate:
-      basepath: "/api/authn"
+      basepath: "/api/v1/authn"
 
     forgotPassword:
       basepath: "/credentials/forgot_password?sendEmail=false"

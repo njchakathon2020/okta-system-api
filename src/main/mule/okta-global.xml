@@ -35,14 +35,14 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 		name="httpRequestConfigurationOktaMain"
 		doc:name="HTTP Request configuration"
 		doc:id="066cd71c-97a2-466b-98a8-fdac3dae4e7e" responseTimeout="30000">
-		<http:request-connection protocol="HTTPS"
+		<http:request-connection protocol="${okta.protocol}"
 			host="${okta.host}" port="${okta.port}" />
 	</http:request-config>
 	<http:request-config
 		name="httpRequestConfigurationOktaUserAuthentication"
 		doc:name="HTTP Request configuration"
 		doc:id="4441828e-fb84-4d03-b3a9-43aa730b06b5">
-		<http:request-connection protocol="HTTPS"
+		<http:request-connection protocol="${okta.protocol}"
 			host="${okta.host}" port="${okta.port}">
 			<http:authentication>
 				<http:basic-authentication
@@ -61,14 +61,14 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
 				doc:id="737b64fc-be44-4c63-ae78-876905f2f795"
-				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				config-ref="jsonLoggerConfig" message="Error"
 				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
 			<set-payload
 				value="#[%dw 2.0
 output application/json
 ---
 {
-  statusCode: &quot;500&quot;,
+  statusCode: &quot;403&quot;,
   message: &quot;Forgot Password not allowed in user's current status.&quot;
  }]"
 				doc:name="Set Payload with error message"
@@ -85,16 +85,16 @@ output application/json
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
 				doc:id="c24459fe-fab9-4467-954a-79024624d9e3"
-				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				config-ref="jsonLoggerConfig" message="Error"
 				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
 			<set-payload
-				value="#[%dw 2.0
+				value='#[%dw 2.0
 output application/json
 ---
 {
-  statusCode: &quot;500&quot;,
-  message: &quot;User not found. Try with correct User ID.&quot;
- }]"
+  statusCode: "404",
+  message: "User not found. Try with correct User ID."
+ }]'
 				doc:name="Set Payload with error message"
 				doc:id="d73f9bed-65ce-4f81-a480-ab4b739e58fb" />
 			<json-logger:logger
@@ -105,51 +105,16 @@ output application/json
 		</on-error-propagate>
 		<on-error-propagate enableNotifications="true"
 			logException="true" doc:name="On Error Propagate"
-			doc:id="51b04a15-1bad-46c3-b6e8-a23ef24d528f" type="OKTA:ERROR">
-
-			<json-logger:logger
-				doc:name="JSON Logger Before Transform Message"
-				doc:id="7bf57e13-b064-49f3-90f0-4e9d3ee2b02a"
-				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
-				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
-			<ee:transform doc:name="Error Code Transform Message"
-				doc:id="d977dac2-f966-4bde-8c10-6e50c52c5798">
-				<ee:message>
-					<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-{
-	"statusCode": if(!isEmpty(error.muleMessage.payload))
-	 				error.muleMessage.payload.errorCode 
-	 			 else 
-	 			 	message.attributes.httpStatus,
-	"message": if(!isEmpty(error.muleMessage.payload) and
-					   !isEmpty(error.muleMessage.payload.errorCauses.*errorSummary)) 
-						error.muleMessage.payload.errorCauses.*errorSummary
-					else
-						error.detailedDescription
-}]]></ee:set-payload>
-				</ee:message>
-			</ee:transform>
-			<json-logger:logger
-				doc:name="JSON Logger Error Exit"
-				doc:id="4b5ea669-4847-4668-b445-9abc5e8196ab"
-				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
-				tracePoint="END" />
-		</on-error-propagate>
-
-		<on-error-propagate enableNotifications="true"
-			logException="true" doc:name="On Error Propagate"
-			doc:id="bb075b28-96f7-4f97-8783-ff81d0828197"
+			doc:id="bd0d00c3-12cb-41f4-816f-e0ce3965697e"
 			type="OKTA:UNAUTHORIZED">
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
-				doc:id="e85c2bc4-dee4-435e-8087-cdbb2fec6f72"
-				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				doc:id="8d86b739-3bd1-4b1d-88a9-706bcf9d2fe5"
+				config-ref="jsonLoggerConfig" message="Error"
 				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
 
 			<ee:transform doc:name="Error Code Transform Message"
-				doc:id="5d66d4cb-3eef-49de-92aa-c5be008d48cd">
+				doc:id="9746cde8-ed59-4774-b4a7-efe15d6dcf94">
 				<ee:message>
 					<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -162,17 +127,50 @@ output application/json
 			</ee:transform>
 			<json-logger:logger
 				doc:name="JSON Logger Error Exit"
-				doc:id="6cb8eba8-14ac-4138-9665-de35181af462"
+				doc:id="2ab263f1-06ab-491f-a840-6b14a93cb09b"
 				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
 				tracePoint="END" />
 		</on-error-propagate>
+		<on-error-propagate enableNotifications="true"
+			logException="true" doc:name="On Error Propagate"
+			doc:id="51b04a15-1bad-46c3-b6e8-a23ef24d528f" type="OKTA:ERROR">
+
+			<json-logger:logger
+				doc:name="JSON Logger Before Transform Message"
+				doc:id="7bf57e13-b064-49f3-90f0-4e9d3ee2b02a"
+				config-ref="jsonLoggerConfig" message="Error"
+				tracePoint="BEFORE_TRANSFORM" priority="ERROR" />
+			<ee:transform doc:name="Error Code Transform Message"
+				doc:id="d977dac2-f966-4bde-8c10-6e50c52c5798">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"statusCode": 400,
+	"message": if(!isEmpty(error.muleMessage.typedValue.value) and
+					   !isEmpty(error.muleMessage.typedValue.value.errorCauses.*errorSummary)) 
+						error.muleMessage.typedValue.value.errorCauses.*errorSummary
+					else
+						error.detailedDescription
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<json-logger:logger
+				doc:name="JSON Logger Error Exit"
+				doc:id="4b5ea669-4847-4668-b445-9abc5e8196ab"
+				config-ref="jsonLoggerConfig" message="JSON Logger Error Exit"
+				tracePoint="END" />
+		</on-error-propagate>
+
+		
 		<on-error-propagate enableNotifications="true"
 			logException="true" doc:name="On Error Propagate"
 			doc:id="48bc7cf6-41fe-438d-9339-545d2d447922" type="ANY">
 			<json-logger:logger
 				doc:name="JSON Logger Before Transform Message"
 				doc:id="aa4ca4f7-3d19-4622-86c9-b104a1fc2a2b"
-				config-ref="jsonLoggerConfig" message="#[error.muleMessage.payload]"
+				config-ref="jsonLoggerConfig" message="Error"
 				tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
 			<set-payload
 				value="#[%dw 2.0

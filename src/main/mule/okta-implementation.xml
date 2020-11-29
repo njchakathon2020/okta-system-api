@@ -81,10 +81,11 @@ output application/json
 		<http:request method="POST"
 			doc:name="OKTA User Creation POST Request"
 			doc:id="0b133bbc-960f-4390-999f-66eb998e5b66"
-			path="${okta.user.basepath}?activate=true"
+			path="${okta.user.basepath}"
 			outputMimeType="application/json" responseTimeout="30000" config-ref="httpRequestConfigurationOktaMain">
 			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
 			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping sourceType="HTTP:UNAUTHORIZED" targetType="OKTA:UNAUTHORIZED" />
 			<error-mapping targetType="OKTA:ERROR" />
 			<http:headers><![CDATA[#[output application/java
 ---
@@ -152,8 +153,8 @@ output application/json
 output application/json
 ---
 {
-  "username": payload.email,
-  "password": payload.password   
+  "username": message.payload.email,
+  "password": message.payload.password   
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
@@ -171,6 +172,7 @@ output application/json
 			outputMimeType="application/json">
 			<error-mapping sourceType="HTTP:FORBIDDEN" targetType="OKTA:FORBIDDEN" />
 			<error-mapping sourceType="HTTP:NOT_FOUND" targetType="OKTA:NOT_FOUND" />
+			<error-mapping sourceType="HTTP:UNAUTHORIZED" targetType="OKTA:UNAUTHORIZED" />
 			<error-mapping targetType="OKTA:ERROR" />
 		</http:request>
 		<json-logger:logger doc:name="Log Response Payload"
@@ -266,6 +268,7 @@ output application/json
 	</flow>
 	<flow name="forgot-password-flow"
 		doc:id="07974fdc-92e5-4dd3-9dbf-82d4de054f98">
+		<set-variable value="#[attributes.uriParams.userId]" doc:name="Set Variable userId" doc:id="bb552e9d-e863-4d62-b3f2-a822fe630ee1" variableName="userId" />
 		<flow-ref doc:name="Validate Client Credentials"
 			doc:id="e5f1135b-3738-40e3-89ba-e5da722aeb95"
 			name="validate-client-credentials-flow" />
@@ -322,7 +325,7 @@ output application/json
 		<flow-ref doc:name="Set OKTA App Token Flow"
 			doc:id="1bb3a66a-9511-4549-8987-f09721715421"
 			name="set-variables-flow" />
-		<http:request method="POST"
+		<http:request method="GET"
 			doc:name="OKTA Get User"
 			doc:id="19f317bb-2ab4-4b65-bea3-56b8daa06043"
 			path="${okta.user.basepath}/{userId}"
