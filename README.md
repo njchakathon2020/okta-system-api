@@ -58,7 +58,7 @@ The list of endpoint accessible are:
     
     Input: It must be a valid userId.
    
-    Response: On successful request, Okta sends an email to the user with a recovery token to complete the revovery transaction.
+    Response: On successful request, Okta sends an email to the user with a recovery token to complete the recovery transaction.
     
    */users/{userId}/forgotPassword*
     
