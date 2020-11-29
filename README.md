@@ -27,7 +27,7 @@ The list of endpoint accessible are:
     
     - On Success:
     
-      On successful validation it returns statusm sessionToken, and expireAt date along with additional information
+      On successful validation it returns status, sessionToken, and expireAt date along with additional information
       
     - On Failure:
     
