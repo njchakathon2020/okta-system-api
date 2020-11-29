@@ -1,6 +1,6 @@
 # okta-system-api
 
-About the API
+###About the project
 
 The okta-system-api is used to access the Okta services.To access this endpoint user need to have valid client-id and client-secret credentials.
 
@@ -8,7 +8,7 @@ The list of endpoint accessible are:
 
 **1. Create User**
    
-   Create a new user in Okta. . 
+   Creates a new user in Okta.
    
    Input: The mandatory input fileds are Username, First Name, Last Name, Password, and Email.
    
@@ -18,6 +18,7 @@ The list of endpoint accessible are:
     
     - Method POST. 
     - It is used to create new user in the Okta
+    
     
  **2. Authenticate User**
   
@@ -41,7 +42,7 @@ The list of endpoint accessible are:
     
 **3. Get user information**
  
-    This endpoint allows a valid user to view their profile information.
+    This endpoint allows a to fetch the profile of given user.
     
     Input: It must be a valid userId.
    
@@ -54,13 +55,13 @@ The list of endpoint accessible are:
     
  **4. Forgot password**
     
-    This allows user to reset the password using the email factor.
+    This allows user to reset the password.
     
     Input: It must be a valid userId.
    
-    Response: On successful request, Okta sends an email to the user with a recovery token to complete the recovery transaction.
+    Response: On successful request, Okta sends a reset password url. Password can be reset by navigating to that url.
     
    */users/{userId}/forgotPassword*
     
     - Method GET. 
-    - It provides user the option to reset the password. 
+    - It provides user the url to reset the password. 
