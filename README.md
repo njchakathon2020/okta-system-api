@@ -39,7 +39,7 @@ The list of endpoint accessible are:
     - Method POST. 
     - It is used to validate user credentials before allowing user to access any services 
     
-** 3. Get user information**
+** 3. Get user information **
  
     This endpoint allows a valid user to view their profile information.
     
@@ -52,7 +52,7 @@ The list of endpoint accessible are:
     - Methos GET. 
     - It is used to retrive a specific user information
     
- **4. Forgot password**
+ ** 4. Forgot password **
     
     This allows user to reset the password using the email factor.
     
