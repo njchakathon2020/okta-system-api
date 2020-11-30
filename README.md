@@ -10,13 +10,13 @@ Example: X-API-ClientKey: 2f9f2d34-ed4f-44d0-rte4-636182f402db
          
 ## The list of endpoints:
 
-* Create User
+**1 Create User**
   
    It is used to create new user in the Okta
      
-   Input: The mandatory input fields are Username, First Name, Last Name, Password, and Email.
+      Input: The mandatory input fields are Username, First Name, Last Name, Password, and Email.
   
-   Resource: */users*
+      Resource: */users*
     
     - Method POST. 
     
@@ -24,7 +24,7 @@ Example: X-API-ClientKey: 2f9f2d34-ed4f-44d0-rte4-636182f402db
     
     Response: Returns a Okta User ID, Status, Created timestamp and relevent URL
     
- * Authenticate User
+ **2 Authenticate User**
   
   It is used to validate user credentials before allowing user to access any services. The primary user authentication is used to validate users. 
     
