@@ -2,16 +2,16 @@
 
 ### About the project
 
-The okta-system-api is used to access the Okta services.To access this endpoint user need to have valid client-id and client-secret credentials.
+The okta-system-api is used to access the Okta services.To access this endpoint user need to create an Okta account which would giv valid client-id and client-secret credentials.
 
 The list of endpoint accessible are:
 
-**1. Create User**
-   
-   Creates a new user in Okta.
-   
+* Create User
+  
+   ```
+   Endpoint: /users
+   Method: POST
    Input: The mandatory input fileds are Username, First Name, Last Name, Password, and Email.
-   
    Response: Returns a Okta User ID, Status, Created timestamp and relevent URL
   
    */users*
@@ -20,7 +20,7 @@ The list of endpoint accessible are:
     - It is used to create new user in the Okta
     
     
- **2. Authenticate User**
+ * Authenticate User
   
     It is used to authenticate the users. Here primary user authentication is used to validate users. 
     
