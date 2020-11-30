@@ -5,8 +5,11 @@
 The okta-system-api is used to access the Okta services.To access this endpoint user must have a valid client-id and client-secret credentials.
 This information must be passed in the header. 
 
-Example: X-API-ClientKey: 2f9f2d34-ed4f-44d0-rte4-636182f402db
-         X-API-ClientSecret: 342167d0-f78f-65457-aa21-b21bdf0590bc
+Example: 
+
+         X-API-ClientKey: XXXX-XXXX-XXXX-XXXX-XXXXXXXX
+
+         X-API-ClientSecret: XXXX-XXXX-XXXX-XXXX-XXXXXXXX
          
 ## The list of endpoints:
 
@@ -30,7 +33,7 @@ Example: X-API-ClientKey: 2f9f2d34-ed4f-44d0-rte4-636182f402db
     
     Input: The inputs are  email and password 
     
-    Resource: */users/authenticate* 
+    Resource: _ /users/authenticate  
     
     - Method POST. 
     
