@@ -1,67 +1,79 @@
 # okta-system-api
 
-### About the project
+## About the project
 
-The okta-system-api is used to access the Okta services.To access this endpoint user need to create an Okta account which would giv valid client-id and client-secret credentials.
+The okta-system-api is used to access the Okta services.To access this endpoint user must have a valid client-id and client-secret credentials.
+This information must be passed in the header. 
 
-The list of endpoint accessible are:
+Example: X-API-ClientKey: 2f9f2d34-ed4f-44d0-rte4-636182f402db
+         X-API-ClientSecret: 342167d0-f78f-65457-aa21-b21bdf0590bc
+         
+## The list of endpoints:
 
 * Create User
   
-   ```
-   Endpoint: /users
-   Method: POST
-   Input: The mandatory input fileds are Username, First Name, Last Name, Password, and Email.
-   Response: Returns a Okta User ID, Status, Created timestamp and relevent URL
+   It is used to create new user in the Okta
+     
+   Input: The mandatory input fields are Username, First Name, Last Name, Password, and Email.
   
-   */users*
+   Resource: */users*
     
     - Method POST. 
-    - It is used to create new user in the Okta
     
+    - Example http://okta-system-api.us-e2.cloudhub.io/api/users
+    
+    Response: Returns a Okta User ID, Status, Created timestamp and relevent URL
     
  * Authenticate User
   
-    It is used to authenticate the users. Here primary user authentication is used to validate users. 
+  It is used to validate user credentials before allowing user to access any services. The primary user authentication is used to validate users. 
     
-    Input: 
+    Input: The inputs are  email and password 
     
-    - On Success:
-    
-      On successful validation it returns status, sessionToken, and expireAt date along with additional information
-      
-    - On Failure:
-    
-      For invalid credentials it return the unsuccessful status code.
-    
-    
-  */users/authenticate* 
+    Resource: */users/authenticate* 
     
     - Method POST. 
-    - It is used to validate user credentials before allowing user to access any services 
+    
+    - Example http://okta-system-api.us-e2.cloudhub.io/api/users/authenticate
+    
+    Response:
+    - On Success: 
+      On successful validation it returns status, sessionToken, and expireAt date along with additional information
+      
+    - On Failure:    
+      For invalid credentials it return the unsuccessful status code.
     
 **3. Get user information**
  
-    This endpoint allows a to fetch the profile of given user.
+   It is used to retrive a specific user information.
     
-    Input: It must be a valid userId.
+    Input: Use a valid 'userId'.
    
-    Response: Returns information such as: Username, First Name, Last Name, Password, and Email
+    Resource: */users/{userId}*
     
-   */users/{userId}*
+    - Method GET
     
-    - Method GET. 
-    - It is used to retrive a specific user information
+    - Example: http://okta-system-api.us-e2.cloudhub.io/api/users/00u1deo3bwREiogH15
+    
+   Response: Returns information such as: Username, First Name, Last Name, Password, and Email
+    
     
  **4. Forgot password**
     
-    This allows user to reset the password.
+    This allows user to reset the password. This will send an email to the user to reset the password.
     
-    Input: It must be a valid userId.
+    Input: Enter a valid userId.
    
-    Response: On successful request, Okta sends a reset password url. Password can be reset by navigating to that url.
-    
-   */users/{userId}/forgotPassword*
+    Resource: */users/{userId}/forgotPassword*
     
     - Method GET. 
-    - It provides user the url to reset the password. 
+    
+    - Example: http://okta-system-api.us-e2.cloudhub.io/api/users/00u1deo3bwREiofU15/forgotPassword
+    
+    Response: On successful request, Okta sends a reset password url. Password can be reset by navigating to that url.
+    
+    
+  ## External Endpoint
+  
+  This project uses the Okta services as an external sevice. To use the Okta service for an application, a project must be created in the okta account. 
+  On account creation it generates a APIKEY that must be used in the application to access the Okta service.
