@@ -19,7 +19,7 @@ Example:
      
       Input: The mandatory input fields are Username, First Name, Last Name, Password, and Email.
   
-      Resource: */users*
+      Resource:  */users*
     
     - Method POST. 
     
@@ -33,7 +33,7 @@ Example:
     
     Input: The inputs are  email and password 
     
-    Resource: _ /users/authenticate  
+    Resource: */users/authenticate*  
     
     - Method POST. 
     
