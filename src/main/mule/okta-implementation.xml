@@ -54,14 +54,14 @@ output application/json
 ---
 {
   "profile": {
-    "firstName": payload.firstName,
-    "lastName": payload.lastName,
-    "email": payload.email,
-    "login": payload.email,
-    "mobilePhone": payload.mobilePhone
+    "firstName": message.payload.firstName,
+    "lastName": message.payload.lastName,
+    "email": message.payload.email,
+    "login": message.payload.email,
+    "mobilePhone": message.payload.mobilePhone
   },
   "credentials": {
-    "password" : { "value": payload.password }
+    "password" : { "value": message.payload.password }
   },
    "groupIds": [
     "00g1dgukcNjtfL6Vc5d6"
@@ -74,7 +74,7 @@ output application/json
 			doc:id="2aa70bca-00a9-4e5b-b8dc-7618aef5af55"
 			config-ref="jsonLoggerConfig"
 			message="OKTA User Creation POST Request Payload"
-			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+			tracePoint="AFTER_TRANSFORM"/>
 		<flow-ref doc:name="Set OKTA App Token Flow"
 			doc:id="bf5bfd0c-24cd-4ecb-ae34-4d8d0fbaf1ca"
 			name="set-variables-flow" />
@@ -97,7 +97,7 @@ output application/json
 			doc:id="49575cd8-d50e-4dcd-a792-b1df97a48070"
 			config-ref="jsonLoggerConfig"
 			message="OKTA User Creation POST Request Payload"
-			tracePoint="AFTER_REQUEST" priority="TRACE" />
+			tracePoint="AFTER_REQUEST"/>
 		<ee:transform doc:name="Create User Response" doc:id="5d89ba47-e30b-4afd-918e-8ef008fc0d21" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -163,7 +163,7 @@ output application/json
 			doc:id="9e2b362a-cd9d-4ddc-a1ed-2f33240246ba"
 			config-ref="jsonLoggerConfig"
 			message="User Authentication Request Payload"
-			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+			tracePoint="AFTER_TRANSFORM"/>
 		<http:request method="POST"
 			doc:name="OKTA User Authentication Request- POST"
 			doc:id="275623ed-e63a-4eec-99be-5a0fce2a4ab2"
@@ -179,7 +179,7 @@ output application/json
 			doc:id="def235ec-d150-49f2-be60-465f3b7dbe0d"
 			config-ref="jsonLoggerConfig"
 			message="User Authentication Response Payload"
-			tracePoint="BEFORE_TRANSFORM" priority="TRACE" />
+			tracePoint="BEFORE_TRANSFORM"/>
 		<ee:transform doc:name="User Authentication Response" doc:id="b71066c8-6155-4389-a5ba-e980354b7f51" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -201,7 +201,7 @@ output application/json
 			doc:id="5a377ad5-fb70-474c-bd8f-a5d4bcb7b732"
 			config-ref="jsonLoggerConfig"
 			message=" User Authentication Response Payload"
-			tracePoint="AFTER_TRANSFORM" priority="TRACE" />
+			tracePoint="AFTER_TRANSFORM"/>
 		<choice doc:name="Choice"
 			doc:id="37fa86e6-93b5-4612-aedb-c45527c371f3">
 			<when expression='#[message.attributes.statusCode == 200]'>
@@ -217,7 +217,7 @@ output application/json
 			doc:name="Authorization Sub Flow Entry"
 			doc:id="ae14313f-e994-4c6f-a92e-48d1fa7ef618"
 			config-ref="jsonLoggerConfig" message="Authorization Sub Flow Entry" />
-		<http:request method="POST" doc:name="Request"
+		<http:request method="POST" doc:name="Request to OAuth 2.0"
 			doc:id="742fcf72-9e43-4404-9b98-111e05209cb6"
 			config-ref="httpRequestConfigurationOktaUserAuthentication"
 			path="${okta.app.auth.url}" outputMimeType="application/json">
@@ -268,7 +268,7 @@ output application/json
 	</flow>
 	<flow name="forgot-password-flow"
 		doc:id="07974fdc-92e5-4dd3-9dbf-82d4de054f98">
-		<set-variable value="#[attributes.uriParams.userId]" doc:name="Set Variable userId" doc:id="bb552e9d-e863-4d62-b3f2-a822fe630ee1" variableName="userId" />
+		<set-variable value="#[message.attributes.uriParams.userId]" doc:name="Set Variable userId" doc:id="bb552e9d-e863-4d62-b3f2-a822fe630ee1" variableName="userId" />
 		<flow-ref doc:name="Validate Client Credentials"
 			doc:id="e5f1135b-3738-40e3-89ba-e5da722aeb95"
 			name="validate-client-credentials-flow" />
@@ -320,8 +320,8 @@ output application/json
 			name="validate-client-credentials-flow" />
 		<json-logger:logger doc:name="Payload"
 			doc:id="87b99093-38c4-459f-81b2-2a35c1e6b2b1"
-			config-ref="jsonLoggerConfig" message="OKTA Deactivate User Payload"
-			tracePoint="BEFORE_REQUEST" />
+			config-ref="jsonLoggerConfig" message="OKTA Client Credentials Payload"
+			tracePoint="BEFORE_REQUEST" priority="TRACE"/>
 		<flow-ref doc:name="Set OKTA App Token Flow"
 			doc:id="1bb3a66a-9511-4549-8987-f09721715421"
 			name="set-variables-flow" />
@@ -348,8 +348,8 @@ output application/json
 		<json-logger:logger doc:name="Log Response Payload"
 			doc:id="8e9393e7-e0d7-46ab-83e4-b7f858b83616"
 			config-ref="jsonLoggerConfig"
-			message="OKTA Deactivate User Response Payload"
-			tracePoint="AFTER_REQUEST" priority="TRACE" />
+			message="OKTA User Response Payload"
+			tracePoint="AFTER_REQUEST"/>
 		<ee:transform doc:name="Create User Response"
 			doc:id="443c31ca-1173-48c9-96af-be9e17f38ecb">
 			<ee:message>
@@ -376,6 +376,7 @@ output application/json
 		</ee:transform>
 
 	</flow>
+
 
 </mule>
 

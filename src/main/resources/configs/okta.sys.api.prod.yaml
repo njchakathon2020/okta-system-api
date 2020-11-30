@@ -1,22 +1,22 @@
 http:
-  port: "8084"
+  port: "8081"
   request:
     header:
-      clientId: "2f9f2d34-cf0d-44d0-bac3-636182f402db"
-      clientSecret: "921867d0-f78f-4137-aa21-b21bdf0590bc"
+      clientId: "*****"
+      clientSecret: "*****"
       
 okta:
-  host: "dev-6077134.okta.com"
+  host: "*********"
   port: "443"
   
   protocol: "HTTPS"
   
   app:
-    token: "SSWS 004ytwc_wLyzw5JHQc70P56qzFvMB24UclSV8-3ZwG"
+    token: "SSWS ****************"
     auth:
       url: "/oauth2/default/v1/token?scope=mulescope&grant_type=client_credentials"
-      clientId: "0oa1dimum1UuEVwjn5d6"
-      clientSecret: "97wuJ2yduQOhAUV8YzcKzdGJ44ltK0R-Z7L-vmMU"
+      clientId: "*************"
+      clientSecret: "*****"
 
   user:
     basepath: "/api/v1/users?activate=true"

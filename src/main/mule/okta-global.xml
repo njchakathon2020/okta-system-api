@@ -38,7 +38,7 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 		<http:request-connection protocol="${okta.protocol}"
 			host="${okta.host}" port="${okta.port}" />
 	</http:request-config>
-	<http:request-config
+	<!-- <http:request-config
 		name="httpRequestConfigurationOktaUserAuthentication"
 		doc:name="HTTP Request configuration"
 		doc:id="4441828e-fb84-4d03-b3a9-43aa730b06b5">
@@ -48,6 +48,15 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
 				<http:basic-authentication
 					username="${okta.app.auth.clientId}" password="${okta.app.auth.clientSecret}" />
 			</http:authentication>
+		</http:request-connection>
+	</http:request-config> -->
+	
+	<http:request-config
+		name="httpRequestConfigurationOktaUserAuthentication"
+		doc:name="HTTP Request configuration"
+		doc:id="6bb3fb8e-5665-4bbe-aea8-1b8d14b7f349">
+		<http:request-connection protocol="${okta.protocol}"
+			host="${okta.host}" port="${okta.port}">
 		</http:request-connection>
 	</http:request-config>
 
@@ -148,11 +157,7 @@ output application/json
 ---
 {
 	"statusCode": 400,
-	"message": if(!isEmpty(error.muleMessage.typedValue.value) and
-					   !isEmpty(error.muleMessage.typedValue.value.errorCauses.*errorSummary)) 
-						error.muleMessage.typedValue.value.errorCauses.*errorSummary
-					else
-						error.detailedDescription
+	"message": "Bad Request."
 }]]></ee:set-payload>
 				</ee:message>
 			</ee:transform>
